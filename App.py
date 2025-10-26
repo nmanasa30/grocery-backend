@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -51,9 +52,8 @@ def login():
     username = data.get('username')
     password = data.get('password')
     user = next((u for u in users if u["username"]==username and u["password"]==password), None)
-    for user in users:
-        if user['username']==username and user['password']==password:
-            return jsonify({"status":"success","message":"Login successful"})
+    if user:
+        return jsonify({"status":"success","message":"Login successful"})
     return jsonify({"status":"error","message":"Invalid credentials"})
 
 @app.route('/api/signup', methods=['POST'])
@@ -97,4 +97,5 @@ def create_payment():
 
 # ---------------- Main ----------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render uses PORT env variable
+    app.run(host='0.0.0.0', port=port, debug=True)

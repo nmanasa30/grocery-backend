@@ -73,28 +73,40 @@ def create_order():
         return jsonify({"status": "error", "message": "Invalid order data"}), 400
     order = {
         "id": len(orders) + 1,
+        "name": data.get("name"),
+        "phoneNumber": data.get("phoneNumber"),
+        "address": data.get("address"),
+        "pincode": data.get("pincode"),
         "cart": data["cart"],
-        "phoneNumber": data["phoneNumber"]
+        "status": "Pending Payment"
     }
     orders.append(order)
-    print(f"New Order: {order}")
-    return jsonify({"status": "success", "message": "Order received", "orderId": order["id"]})
-
-@app.route('/createPayment', methods=['POST'])
-def create_payment():
+    print(f"🆕 New Order Received: {order}")
+  # --- IMPORTANT: return a JSON response ---
+    return jsonify({
+        "status": "success",
+        "message": "Order received successfully!",
+        "orderId": order["id"]
+    }), 201
+# ---------------- Payment (Dummy Manual Payment Success) ----------------
+@app.route('/api/payment-success', methods=['POST'])
+def payment_success():
     data = request.json
-    if not data or "amount" not in data or "orderId" not in data:
-        return jsonify({"status": "error", "message": "Invalid payment data"}), 400
-    payload = {
-        "orderId": data["orderId"],
-        "amount": data["amount"],
-        "phoneNumber": data.get("phoneNumber", ""),
-        "merchantId": "TEST_MERCHANT",
-        "currency": "INR",
-        "status": "INITIATED"
-    }
-    return jsonify(payload)
+    order_id = data.get("orderId")
 
+    for order in orders:
+        if order["id"] == order_id:
+            order["status"] = "Paid"
+            print(f"✅ Payment Successful for Order #{order_id}")
+            return jsonify({"status": "success", "message": "Payment marked as successful."})
+
+    return jsonify({"status": "error", "message": "Order not found!"}), 404
+
+
+# ---------------- View All Orders (for admin testing) ----------------
+@app.route('/api/orders', methods=['GET'])
+def get_all_orders():
+    return jsonify(orders)
 # ---------------- Main ----------------
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Render uses PORT env variable
